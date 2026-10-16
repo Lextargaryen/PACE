@@ -1,0 +1,16 @@
+{
+  "name": "PACE Bus Survey App",
+  "short_name": "PACE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "description": "High-Speed Mobile-First Field Bus Survey App for Transit Surveyors",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text x='50' y='64' font-family='system-ui,sans-serif' font-size='38' font-weight='800' text-anchor='middle' fill='%23ffffff'>PACE</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
