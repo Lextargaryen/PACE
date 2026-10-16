@@ -20,6 +20,7 @@
       <div class="surveyor-badge" id="networkStatusBtn" title="Surveyor & Network status">
         <span class="net-dot online" id="networkDot"></span>
         <span class="surveyor-name" id="displayRecorderName">---</span>
+        <span class="surveyor-location" id="displayRecorderLocation"></span>
         <span class="offline-badge" id="offlineQueueBadge" style="display:none">0</span>
       </div>
     </div>
@@ -84,8 +85,13 @@
         <p class="modal-sub">Enter your surveyor name or ID to begin session.</p>
         <form id="recorderForm" onsubmit="event.preventDefault(); window.TransitPulse.confirmRecorderName();">
           <div class="field">
-            <label for="recorderNameInput">Surveyor Name or ID <span class="req">*</span></label>
+            <label for="recorderNameInput">Collector Name or ID <span class="req">*</span></label>
             <input type="text" id="recorderNameInput" class="input big-input" placeholder="e.g. Alex Perera or SURVEYOR-01" required autocomplete="name" autofocus />
+          </div>
+          <div class="field">
+            <label for="recorderLocationInput">Collection Location <span class="req">*</span></label>
+            <input type="text" id="recorderLocationInput" class="input big-input" placeholder="e.g. Colombo Central Bus Stand" required autocomplete="off" />
+            <span class="hint">This location is recorded for the session and can only be changed by resetting.</span>
           </div>
           <div class="presets">
             <span class="presets-label">Presets:</span>
@@ -158,12 +164,9 @@
           </div>
 
           <div class="field">
-            <div class="label-row">
-              <label for="inputLocation">Location <span class="req">*</span></label>
-              <button type="button" class="link-btn" id="btnRefetchGps">Fetch GPS</button>
-            </div>
-            <input type="text" id="inputLocation" class="input" placeholder="Acquiring nearest major location..." required />
-            <span class="hint" id="gpsStatusHint">GPS will identify the nearest major location. You can override it manually.</span>
+            <label for="inputLocation">Location <span class="req">*</span></label>
+            <input type="text" id="inputLocation" class="input" placeholder="Session location" readonly required />
+            <span class="hint">Location is locked to the current collection session.</span>
           </div>
 
           <div class="row-2">
@@ -179,6 +182,7 @@
           </div>
 
           <div class="modal-actions">
+            <button type="button" class="btn-danger" id="btnDeleteBusCard" style="display:none">Delete Card</button>
             <button type="button" class="btn-cancel" id="btnCancelBusModal">Cancel</button>
             <button type="submit" class="btn-save" id="btnSaveBusCard">Save Bus</button>
           </div>
