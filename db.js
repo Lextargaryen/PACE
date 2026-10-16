@@ -1,7 +1,9 @@
 const { DatabaseSync } = require('node:sqlite');
 const path = require('node:path');
 
-const DB_PATH = path.join(__dirname, 'transit_pulse.db');
+const DB_PATH = process.env.VERCEL
+  ? path.join('/tmp', 'transit_pulse.db')
+  : path.join(__dirname, 'transit_pulse.db');
 const db = new DatabaseSync(DB_PATH);
 
 // Initialize database schema
