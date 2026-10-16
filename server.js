@@ -30,7 +30,7 @@ function escapeCsvValue(val) {
  * POST /api/surveys/submit
  * Receives a completed bus card payload and writes it to the database
  */
-app.post('/api/surveys/submit', (req, res) => {
+app.post('/api/surveys/submit', async (req, res) => {
   try {
     const payload = req.body;
 
@@ -57,7 +57,7 @@ app.post('/api/surveys/submit', (req, res) => {
       }
     }
 
-    const savedRecord = insertSurvey(payload);
+    const savedRecord = await insertSurvey(payload);
     return res.status(201).json({
       success: true,
       message: 'Bus survey record submitted successfully',
@@ -76,7 +76,7 @@ app.post('/api/surveys/submit', (req, res) => {
  * POST /api/surveys/batch
  * Syncs multiple queued surveys from offline mode
  */
-app.post('/api/surveys/batch', (req, res) => {
+app.post('/api/surveys/batch', async (req, res) => {
   try {
     const { surveys } = req.body;
     if (!Array.isArray(surveys) || surveys.length === 0) {
@@ -85,7 +85,7 @@ app.post('/api/surveys/batch', (req, res) => {
 
     const inserted = [];
     for (const item of surveys) {
-      const saved = insertSurvey(item);
+      const saved = await insertSurvey(item);
       inserted.push(saved);
     }
 
@@ -107,9 +107,9 @@ app.post('/api/surveys/batch', (req, res) => {
  * GET /api/surveys/export
  * Downloads all recorded survey entries as a CSV file for analysis
  */
-app.get('/api/surveys/export', (req, res) => {
+app.get('/api/surveys/export', async (req, res) => {
   try {
-    const records = getSurveysForExport();
+    const records = await getSurveysForExport();
 
     const headers = [
       'ID',
@@ -171,10 +171,10 @@ app.get('/api/surveys/export', (req, res) => {
  * GET /api/surveys
  * List recorded surveys
  */
-app.get('/api/surveys', (req, res) => {
+app.get('/api/surveys', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit, 10) || 100;
-    const records = getAllSurveys(limit);
+    const records = await getAllSurveys(limit);
     return res.json({ success: true, count: records.length, surveys: records });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch surveys', details: err.message });
@@ -185,9 +185,9 @@ app.get('/api/surveys', (req, res) => {
  * GET /api/stats
  * Aggregate metrics
  */
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
   try {
-    const stats = getSurveyStats();
+    const stats = await getSurveyStats();
     return res.json({ success: true, stats });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to fetch stats', details: err.message });
@@ -197,9 +197,9 @@ app.get('/api/stats', (req, res) => {
 /**
  * DELETE /api/surveys/:id
  */
-app.delete('/api/surveys/:id', (req, res) => {
+app.delete('/api/surveys/:id', async (req, res) => {
   try {
-    const success = deleteSurvey(req.params.id);
+    const success = await deleteSurvey(req.params.id);
     if (!success) {
       return res.status(404).json({ error: 'Record not found' });
     }
