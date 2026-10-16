@@ -24,7 +24,9 @@
     offlineQueue: [],
     theme: 'sunlight',
     isOnline: navigator.onLine,
-    pendingSubmitCardId: null
+    pendingSubmitCardId: null,
+    locationMap: null,
+    locationMarker: null
   };
 
   // DOM ELEMENTS CACHE
@@ -66,6 +68,7 @@
     DOM.inputArrivalTime = document.getElementById('inputArrivalTime');
     DOM.inputDepartureTime = document.getElementById('inputDepartureTime');
     DOM.gpsStatusHint = document.getElementById('gpsStatusHint');
+    DOM.locationMap = document.getElementById('locationMap');
     DOM.btnRefetchGps = document.getElementById('btnRefetchGps');
     DOM.btnCloseBusModal = document.getElementById('btnCloseBusModal');
     DOM.btnCancelBusModal = document.getElementById('btnCancelBusModal');
@@ -276,8 +279,33 @@
   // GEOLOCATION AUTO-FETCH
   // =========================================================================
 
+  function updateLocationMap(latitude, longitude, accuracy) {
+    if (!DOM.locationMap || typeof L === 'undefined') return;
+    const position = [latitude, longitude];
+    if (!state.locationMap) {
+      state.locationMap = L.map(DOM.locationMap, { zoomControl: true }).setView(position, 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(state.locationMap);
+    } else {
+      state.locationMap.setView(position, 15);
+    }
+    if (state.locationMarker) state.locationMarker.remove();
+    state.locationMarker = L.marker(position).addTo(state.locationMap);
+    state.locationMarker.bindPopup(`GPS position (±${Math.round(accuracy)}m)`).openPopup();
+    setTimeout(() => state.locationMap.invalidateSize(), 0);
+  }
+
+  async function resolveNearestMajorLocation(latitude, longitude) {
+    const response = await fetch(`/api/geocode/reverse?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`);
+    if (!response.ok) throw new Error('Reverse geocoding failed');
+    const result = await response.json();
+    return result.location;
+  }
+
   function fetchCurrentLocation() {
-    DOM.inputLocation.placeholder = 'Acquiring GPS coordinates...';
+    DOM.inputLocation.placeholder = 'Acquiring nearest major location...';
     DOM.gpsStatusHint.textContent = 'Contacting GPS satellites / network...';
 
     if (!('geolocation' in navigator)) {
@@ -287,23 +315,26 @@
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude.toFixed(5);
-        const lng = position.coords.longitude.toFixed(5);
-        const accuracy = Math.round(position.coords.accuracy);
-        DOM.inputLocation.value = `${lat}, ${lng}`;
-        DOM.gpsStatusHint.textContent = `GPS fixed (accurate to ±${accuracy}m). Feel free to type landmark name if preferred.`;
+      async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        updateLocationMap(latitude, longitude, accuracy);
+        DOM.inputLocation.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        DOM.gpsStatusHint.textContent = `GPS fixed (±${Math.round(accuracy)}m). Finding nearest major identifier...`;
+        try {
+          const location = await resolveNearestMajorLocation(latitude, longitude);
+          DOM.inputLocation.value = location;
+          DOM.gpsStatusHint.textContent = `Nearest major identifier found (GPS ±${Math.round(accuracy)}m).`;
+        } catch (error) {
+          console.warn('Location lookup failed:', error);
+          DOM.gpsStatusHint.textContent = `GPS fixed (±${Math.round(accuracy)}m). Coordinates retained; enter a landmark if needed.`;
+        }
       },
       (error) => {
         console.warn('Geolocation error:', error);
         DOM.inputLocation.placeholder = 'e.g., Central Bus Terminal Bay 4';
         DOM.gpsStatusHint.textContent = 'GPS unavailable or denied. Please enter location manually.';
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 30000
-      }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
     );
   }
 

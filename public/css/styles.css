@@ -759,11 +759,26 @@ button {
   color: var(--text-primary);
 }
 
-.modal-scroll {
+  .modal-scroll {
   padding: 16px 20px;
   overflow-y: auto;
   flex: 1;
-}
+  }
+
+  .location-map {
+  height: 190px;
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+  }
+
+  .location-map .leaflet-control-attribution {
+  font-size: 9px;
+  }
+
 
 /* FORM ELEMENTS */
 .row-2 {
