@@ -11,7 +11,8 @@
     RECORDER_NAME: 'survey_recorder_name',
     ACTIVE_CARDS: 'active_bus_cards',
     OFFLINE_QUEUE: 'offline_survey_queue',
-    THEME: 'survey_theme'
+    THEME: 'survey_theme',
+    LAST_MANUAL_LOCATION: 'survey_last_manual_location'
   };
 
   // MAXIMUM ALLOWED CONCURRENT BUS CARDS
@@ -25,8 +26,8 @@
     theme: 'sunlight',
     isOnline: navigator.onLine,
     pendingSubmitCardId: null,
-    locationMap: null,
-    locationMarker: null
+    lastManualLocation: '',
+    isApplyingLocationAutomatically: false
   };
 
   // DOM ELEMENTS CACHE
@@ -279,29 +280,28 @@
   // GEOLOCATION AUTO-FETCH
   // =========================================================================
 
-  function updateLocationMap(latitude, longitude, accuracy) {
-    if (!DOM.locationMap || typeof L === 'undefined') return;
-    const position = [latitude, longitude];
-    if (!state.locationMap) {
-      state.locationMap = L.map(DOM.locationMap, { zoomControl: true }).setView(position, 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(state.locationMap);
-    } else {
-      state.locationMap.setView(position, 15);
-    }
-    if (state.locationMarker) state.locationMarker.remove();
-    state.locationMarker = L.marker(position).addTo(state.locationMap);
-    state.locationMarker.bindPopup(`GPS position (±${Math.round(accuracy)}m)`).openPopup();
-    setTimeout(() => state.locationMap.invalidateSize(), 0);
-  }
-
   async function resolveNearestMajorLocation(latitude, longitude) {
     const response = await fetch(`/api/geocode/reverse?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`);
     if (!response.ok) throw new Error('Reverse geocoding failed');
     const result = await response.json();
     return result.location;
+  }
+
+  function applyAutomaticLocation(value) {
+    state.isApplyingLocationAutomatically = true;
+    DOM.inputLocation.value = value || '';
+    state.isApplyingLocationAutomatically = false;
+  }
+
+  function saveLastManualLocation(value) {
+    const location = value.trim();
+    if (!location || state.isApplyingLocationAutomatically) return;
+    state.lastManualLocation = location;
+    try {
+      localStorage.setItem(STORAGE_KEYS.LAST_MANUAL_LOCATION, location);
+    } catch (error) {
+      console.warn('Failed to save manual location:', error);
+    }
   }
 
   function fetchCurrentLocation() {
@@ -317,12 +317,11 @@
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude, accuracy } = position.coords;
-        updateLocationMap(latitude, longitude, accuracy);
-        DOM.inputLocation.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-        DOM.gpsStatusHint.textContent = `GPS fixed (±${Math.round(accuracy)}m). Finding nearest major identifier...`;
+        applyAutomaticLocation(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+        DOM.gpsStatusHint.textContent = `GPS fixed (±${Math.round(accuracy)}m). Finding nearest nearby identifier...`;
         try {
           const location = await resolveNearestMajorLocation(latitude, longitude);
-          DOM.inputLocation.value = location;
+          applyAutomaticLocation(location);
           DOM.gpsStatusHint.textContent = `Nearest major identifier found (GPS ±${Math.round(accuracy)}m).`;
         } catch (error) {
           console.warn('Location lookup failed:', error);
@@ -375,8 +374,13 @@
     DOM.inputArrivalTime.value = formatCurrentTime();
     DOM.inputDepartureTime.value = ''; // left blank during creation
 
-    // Auto-fetch location
-    fetchCurrentLocation();
+    // Prefer the surveyor's last manually entered location; GPS remains available on demand.
+    if (state.lastManualLocation) {
+      applyAutomaticLocation(state.lastManualLocation);
+      DOM.gpsStatusHint.textContent = 'Using your last manually entered location. Fetch GPS to replace it.';
+    } else {
+      fetchCurrentLocation();
+    }
 
     DOM.busModal.style.display = 'flex';
     setTimeout(() => DOM.inputRouteNo.focus(), 150);
@@ -921,6 +925,7 @@
     DOM.btnCancelBusModal.addEventListener('click', closeBusModal);
     DOM.busForm.addEventListener('submit', saveBusCard);
     DOM.btnRefetchGps.addEventListener('click', fetchCurrentLocation);
+    DOM.inputLocation.addEventListener('input', () => saveLastManualLocation(DOM.inputLocation.value));
 
     // Recorder Session
     DOM.btnResetRecorder.addEventListener('click', promptResetRecorder);
@@ -993,6 +998,11 @@
   function init() {
     initDomElements();
     initTheme();
+    try {
+      state.lastManualLocation = localStorage.getItem(STORAGE_KEYS.LAST_MANUAL_LOCATION) || '';
+    } catch (error) {
+      state.lastManualLocation = '';
+    }
     loadActiveCardsFromStorage();
     loadOfflineQueueFromStorage();
     updateOfflineQueueDisplay();

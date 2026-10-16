@@ -30,7 +30,10 @@ app.get('/api/geocode/reverse', async (req, res) => {
     if (!response.ok) return res.status(502).json({ error: 'Reverse geocoding unavailable' });
     const result = await response.json();
     const address = result.address || {};
-    const majorIdentifier = address.city || address.town || address.municipality || address.village || address.suburb || address.county || result.name || result.display_name;
+    // Prefer the closest named feature/road and nearby locality. City-level fields can be many kilometres away.
+    const nearbyPart = address.road || address.pedestrian || address.bus_stop || address.station || address.neighbourhood || address.suburb;
+    const locality = address.city_district || address.town || address.municipality || address.village || address.city;
+    const majorIdentifier = [nearbyPart, locality].filter(Boolean).join(', ') || result.name || address.county || result.display_name;
     return res.json({ location: majorIdentifier || 'GPS location', display_name: result.display_name || '', latitude: lat, longitude: lon });
   } catch (err) {
     console.error('Reverse geocoding failed:', err.message);
