@@ -16,6 +16,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/api/geocode/reverse', async (req, res) => {
+  const lat = Number(req.query.lat);
+  const lon = Number(req.query.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return res.status(400).json({ error: 'Valid latitude and longitude are required' });
+  }
+
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`, {
+      headers: { 'User-Agent': 'PACE Bus Survey/1.0 (field survey application)' }
+    });
+    if (!response.ok) return res.status(502).json({ error: 'Reverse geocoding unavailable' });
+    const result = await response.json();
+    const address = result.address || {};
+    const majorIdentifier = address.city || address.town || address.municipality || address.village || address.suburb || address.county || result.name || result.display_name;
+    return res.json({ location: majorIdentifier || 'GPS location', display_name: result.display_name || '', latitude: lat, longitude: lon });
+  } catch (err) {
+    console.error('Reverse geocoding failed:', err.message);
+    return res.status(502).json({ error: 'Reverse geocoding unavailable' });
+  }
+});
+
 // Helper to escape CSV fields
 function escapeCsvValue(val) {
   if (val === null || val === undefined) return '""';

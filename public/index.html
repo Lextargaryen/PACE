@@ -10,6 +10,8 @@
   <link rel="manifest" href="/manifest.json">
   <title>PACE</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 <body class="theme-light">
 
@@ -162,8 +164,9 @@
               <label for="inputLocation">Location <span class="req">*</span></label>
               <button type="button" class="link-btn" id="btnRefetchGps">Fetch GPS</button>
             </div>
-            <input type="text" id="inputLocation" class="input" placeholder="Acquiring coordinates..." required />
-            <span class="hint" id="gpsStatusHint">Coordinates auto-fetched via geolocation</span>
+            <input type="text" id="inputLocation" class="input" placeholder="Acquiring nearest major location..." required />
+            <span class="hint" id="gpsStatusHint">GPS coordinates will be shown on the map and converted to the nearest major identifier.</span>
+            <div id="locationMap" class="location-map" role="application" aria-label="GPS location map"></div>
           </div>
 
           <div class="row-2">
