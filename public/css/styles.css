@@ -765,7 +765,7 @@ button {
   flex: 1;
   }
 
-  .location-map {
+  .location-map-unused {
   height: 190px;
   width: 100%;
   margin-top: 10px;
@@ -775,7 +775,7 @@ button {
   background: #e2e8f0;
   }
 
-  .location-map .leaflet-control-attribution {
+  .location-map-unused .leaflet-control-attribution {
   font-size: 9px;
   }
 
