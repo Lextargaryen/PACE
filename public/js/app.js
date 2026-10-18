@@ -454,8 +454,6 @@
         location: location,
         arrival_time: arrivalTime,
         departure_time: departureTime,
-        positive_count: 0,
-        negative_count: 0,
         net_sum: 0,
         created_at: Date.now()
       };
@@ -488,16 +486,7 @@
       }
     }
 
-    if (delta > 0) {
-      // Boarded increment
-      card.positive_count = (card.positive_count || 0) + delta;
-    } else {
-      // Alighted increment (stored as positive count of exits)
-      card.negative_count = (card.negative_count || 0) + Math.abs(delta);
-    }
-
-    // Formula: positive_count - abs(negative_count)
-    card.net_sum = card.positive_count - Math.abs(card.negative_count);
+    card.net_sum = (card.net_sum || 0) + delta;
 
     // Immediate sync to localStorage
     saveActiveCardsToStorage();
@@ -588,8 +577,6 @@
       location: card.location,
       arrival_time: card.arrival_time,
       departure_time: finalDepTime,
-      positive_count: card.positive_count || 0,
-      negative_count: card.negative_count || 0,
       net_sum: card.net_sum || 0
     };
 
