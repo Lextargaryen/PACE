@@ -102,9 +102,9 @@ async function runTests() {
 
   const csvBody = await csvRes.text();
   assert.ok(csvBody.includes('Route No'), 'CSV must include Route No header');
-  assert.ok(csvBody.includes('Boarded (+)'), 'CSV must include Boarded (+) header');
-  assert.ok(csvBody.includes('Alighted (-)'), 'CSV must include Alighted (-) header');
   assert.ok(csvBody.includes('Net Count (Sum)'), 'CSV must include Net Count (Sum) header');
+  assert.ok(!csvBody.includes('Boarded (+)'), 'CSV must not include Boarded (+) header');
+  assert.ok(!csvBody.includes('Alighted (-)'), 'CSV must not include Alighted (-) header');
   assert.ok(csvBody.includes('Pettah - Horana'), 'CSV must include the inserted survey data');
   console.log('  ✅ CSV export passed with accurate headers and records\n');
 
@@ -114,7 +114,9 @@ async function runTests() {
   assert.strictEqual(statsRes.status, 200);
   const statsData = await statsRes.json();
   assert.ok(statsData.stats.total_buses >= 2);
-  assert.ok(statsData.stats.total_boarded >= 47);
+  assert.strictEqual(typeof statsData.stats.total_net_passengers, 'number');
+  assert.strictEqual(statsData.stats.total_boarded, undefined);
+  assert.strictEqual(statsData.stats.total_alighted, undefined);
   console.log('  ✅ Stats query passed:', statsData.stats, '\n');
 
   console.log('🎉 ALL TESTS PASSED SUCCESSFULLY! 100% SPECIFICATION CONFORMANCE.');

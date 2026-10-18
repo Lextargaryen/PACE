@@ -91,8 +91,7 @@
     DOM.btnRefreshHistory = document.getElementById('btnRefreshHistory');
     DOM.historyTableBody = document.getElementById('historyTableBody');
     DOM.statTotalBuses = document.getElementById('statTotalBuses');
-    DOM.statTotalBoarded = document.getElementById('statTotalBoarded');
-    DOM.statTotalAlighted = document.getElementById('statTotalAlighted');
+
     DOM.statTotalNet = document.getElementById('statTotalNet');
 
     // Network & Theme
@@ -455,8 +454,6 @@
         location: location,
         arrival_time: arrivalTime,
         departure_time: departureTime,
-        positive_count: 0,
-        negative_count: 0,
         net_sum: 0,
         created_at: Date.now()
       };
@@ -489,16 +486,7 @@
       }
     }
 
-    if (delta > 0) {
-      // Boarded increment
-      card.positive_count = (card.positive_count || 0) + delta;
-    } else {
-      // Alighted increment (stored as positive count of exits)
-      card.negative_count = (card.negative_count || 0) + Math.abs(delta);
-    }
-
-    // Formula: positive_count - abs(negative_count)
-    card.net_sum = card.positive_count - Math.abs(card.negative_count);
+    card.net_sum = (card.net_sum || 0) + delta;
 
     // Immediate sync to localStorage
     saveActiveCardsToStorage();
@@ -514,12 +502,8 @@
       return;
     }
 
-    const valBoarded = cardElem.querySelector('.val-boarded');
-    const valAlighted = cardElem.querySelector('.val-alighted');
     const valNet = cardElem.querySelector('.val-net');
 
-    if (valBoarded) valBoarded.textContent = card.positive_count;
-    if (valAlighted) valAlighted.textContent = card.negative_count;
     if (valNet) {
       valNet.textContent = (card.net_sum > 0 ? '+' : '') + card.net_sum;
     }
@@ -554,9 +538,7 @@
       <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
         <strong>Times:</strong> <span>Arr: ${escapeHtml(card.arrival_time)} | Dep: ${escapeHtml(finalDepTime)}</span>
       </div>
-      <div style="display:flex; justify-content:space-between; font-weight:800; border-top:1px dashed #94a3b8; padding-top:6px;">
-        <span>Boarded: <span style="color:#16a34a">+${card.positive_count}</span></span>
-        <span>Alighted: <span style="color:#dc2626">-${card.negative_count}</span></span>
+      <div style="display:flex; justify-content:flex-end; font-weight:800; border-top:1px dashed #94a3b8; padding-top:6px;">
         <span>Net: <span>${card.net_sum}</span></span>
       </div>
     `;
@@ -595,8 +577,6 @@
       location: card.location,
       arrival_time: card.arrival_time,
       departure_time: finalDepTime,
-      positive_count: card.positive_count || 0,
-      negative_count: card.negative_count || 0,
       net_sum: card.net_sum || 0
     };
 
@@ -748,19 +728,11 @@
             <button type="button" class="card-edit-btn" onclick="window.TransitPulse.openEditBusModal('${card.id}')">Edit</button>
           </div>
 
-          <!-- Metrics summary: Boarded, Net, Alighted -->
+          <!-- Net passenger count -->
           <div class="card-center">
-            <div class="mini-stat">
-              <span class="mini-stat-lbl">Boarded</span>
-              <span class="mini-stat-val green val-boarded">+${card.positive_count || 0}</span>
-            </div>
             <div class="net-display">
               <span class="net-label">Net Count</span>
               <span class="net-value val-net">${netDisplay}</span>
-            </div>
-            <div class="mini-stat">
-              <span class="mini-stat-lbl">Alighted</span>
-              <span class="mini-stat-val red val-alighted">-${card.negative_count || 0}</span>
             </div>
           </div>
 
@@ -814,7 +786,7 @@
   }
 
   async function refreshHistoryRecords() {
-    DOM.historyTableBody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding:16px;">Loading records from database...</td></tr>`;
+    DOM.historyTableBody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:16px;">Loading records from database...</td></tr>`;
 
     try {
       const [surveysRes, statsRes] = await Promise.all([
@@ -831,19 +803,17 @@
         const statData = await statsRes.json();
         const stats = statData.stats || {};
         DOM.statTotalBuses.textContent = stats.total_buses || 0;
-        DOM.statTotalBoarded.textContent = stats.total_boarded || 0;
-        DOM.statTotalAlighted.textContent = stats.total_alighted || 0;
         DOM.statTotalNet.textContent = stats.total_net_passengers || 0;
       }
     } catch (err) {
       console.error('Error fetching history:', err);
-      DOM.historyTableBody.innerHTML = `<tr><td colspan="11" style="padding:16px; color:#dc2626; text-align:center;">Failed to load records from server. (Are you offline?)</td></tr>`;
+      DOM.historyTableBody.innerHTML = `<tr><td colspan="9" style="padding:16px; color:#dc2626; text-align:center;">Failed to load records from server. (Are you offline?)</td></tr>`;
     }
   }
 
   function renderHistoryTable(surveys) {
     if (!surveys || surveys.length === 0) {
-      DOM.historyTableBody.innerHTML = `<tr><td colspan="11" style="padding:20px; text-align:center; color:#64748b;">No survey records submitted yet.</td></tr>`;
+      DOM.historyTableBody.innerHTML = `<tr><td colspan="9" style="padding:20px; text-align:center; color:#64748b;">No survey records submitted yet.</td></tr>`;
       return;
     }
 
@@ -856,8 +826,6 @@
         <td>${escapeHtml(r.ownership_type)}</td>
         <td>${escapeHtml(r.service_type)}</td>
         <td style="font-family:var(--font-mono); font-size:0.8rem;">${escapeHtml(r.arrival_time)}<br>${escapeHtml(r.departure_time)}</td>
-        <td style="color:#16a34a; font-weight:800;">+${r.positive_count}</td>
-        <td style="color:#dc2626; font-weight:800;">-${r.negative_count}</td>
         <td style="font-weight:900;">${(r.net_sum > 0 ? '+' : '') + r.net_sum}</td>
         <td style="font-size:0.8rem;">${escapeHtml(r.recorder_name)}</td>
       </tr>

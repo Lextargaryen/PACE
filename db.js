@@ -18,8 +18,6 @@ function normalizeSurvey(data) {
     location: String(data.location || '').trim(),
     arrival_time: String(data.arrival_time || '').trim(),
     departure_time: String(data.departure_time || '').trim(),
-    positive_count: Number(data.positive_count) || 0,
-    negative_count: Number(data.negative_count) || 0,
     net_sum: Number(data.net_sum) || 0,
     submitted_at_timestamp: data.submitted_at_timestamp || new Date().toISOString()
   };
@@ -58,10 +56,8 @@ async function getSurveyStats() {
   const records = await getSurveysForExport();
   return records.reduce((stats, record) => ({
     total_buses: stats.total_buses + 1,
-    total_boarded: stats.total_boarded + (record.positive_count || 0),
-    total_alighted: stats.total_alighted + (record.negative_count || 0),
     total_net_passengers: stats.total_net_passengers + (record.net_sum || 0)
-  }), { total_buses: 0, total_boarded: 0, total_alighted: 0, total_net_passengers: 0 });
+  }), { total_buses: 0, total_net_passengers: 0 });
 }
 
 async function deleteSurvey(id) {

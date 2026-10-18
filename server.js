@@ -149,8 +149,6 @@ app.get('/api/surveys/export', async (req, res) => {
       'Location',
       'Arrival Time',
       'Departure Time',
-      'Boarded (+)',
-      'Alighted (-)',
       'Net Count (Sum)',
       'Submitted At Timestamp'
     ];
@@ -171,8 +169,6 @@ app.get('/api/surveys/export', async (req, res) => {
         escapeCsvValue(r.location),
         escapeCsvValue(r.arrival_time),
         escapeCsvValue(r.departure_time),
-        escapeCsvValue(r.positive_count),
-        escapeCsvValue(r.negative_count),
         escapeCsvValue(r.net_sum),
         escapeCsvValue(r.submitted_at_timestamp)
       ];
