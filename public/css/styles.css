@@ -472,11 +472,11 @@ button {
   transform: scale(0.96);
 }
 
-/* CARD CENTER — LARGE NET COUNT & BOARDED/ALIGHTED SUB-METRICS */
-.card-center {
+  /* CARD CENTER — LARGE NET COUNT */
+  .card-center {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 12px 14px 10px;
   background: #ffffff;
   border-bottom: 1px solid #f1f5f9;
