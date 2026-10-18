@@ -86,18 +86,12 @@
         <form id="recorderForm" onsubmit="event.preventDefault(); window.TransitPulse.confirmRecorderName();">
           <div class="field">
             <label for="recorderNameInput">Collector Name or ID <span class="req">*</span></label>
-            <input type="text" id="recorderNameInput" class="input big-input" placeholder="e.g. Alex Perera or SURVEYOR-01" required autocomplete="name" autofocus />
+            <input type="text" id="recorderNameInput" class="input big-input" placeholder="e.g. Alex Perera or field ID" required autocomplete="name" autofocus />
           </div>
           <div class="field">
             <label for="recorderLocationInput">Collection Location <span class="req">*</span></label>
             <input type="text" id="recorderLocationInput" class="input big-input" placeholder="e.g. Colombo Central Bus Stand" required autocomplete="off" />
             <span class="hint">This location is recorded for the session and can only be changed by resetting.</span>
-          </div>
-          <div class="presets">
-            <span class="presets-label">Presets:</span>
-            <button type="button" class="preset" onclick="window.TransitPulse.setRecorderPreset('Surveyor A')">Surveyor A</button>
-            <button type="button" class="preset" onclick="window.TransitPulse.setRecorderPreset('Surveyor B')">Surveyor B</button>
-            <button type="button" class="preset" onclick="window.TransitPulse.setRecorderPreset('Surveyor C')">Surveyor C</button>
           </div>
           <button type="submit" class="btn-submit-main" id="btnConfirmRecorder">Start Session</button>
         </form>
@@ -225,8 +219,6 @@
       </div>
       <div class="stats-row">
         <div class="stat"><span class="stat-num" id="statTotalBuses">0</span><span class="stat-lbl">Buses</span></div>
-        <div class="stat"><span class="stat-num green" id="statTotalBoarded">0</span><span class="stat-lbl">Boarded</span></div>
-        <div class="stat"><span class="stat-num red" id="statTotalAlighted">0</span><span class="stat-lbl">Alighted</span></div>
         <div class="stat"><span class="stat-num" id="statTotalNet">0</span><span class="stat-lbl">Net</span></div>
       </div>
       <div class="history-actions">
@@ -244,8 +236,6 @@
               <th>Operator</th>
               <th>Condition</th>
               <th>Times</th>
-              <th>Boarded</th>
-              <th>Alighted</th>
               <th>Net</th>
               <th>Surveyor</th>
             </tr>
